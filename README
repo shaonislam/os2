@@ -1,0 +1,20 @@
+Specifications: 
+	Two executable files:
+		1) Master
+			-fork and exec
+			-keep track of how many children have finished
+			executing and terminate when all children are done
+			-Command Line Options:
+				-h: how it should run
+				-n x: indicate max number of children to
+				      go off of
+				-s: how many children should allowed to exist
+				      int the system at the same time.
+
+		2) Worker (Children):
+			-increment the value of the clock in share memory
+			by that value multiplied by a million. Afterwards check if 
+			the results "overflows" the counter of milliseconds.
+			Once done, they should output a message to the screen of ho much they
+			have incremented and then terminate.
+
