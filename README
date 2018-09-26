@@ -10,6 +10,12 @@ Specifications:
 				      go off of
 				-s: how many children should allowed to exist
 				      int the system at the same time.
+			-1) allocate shared memory, use it, the deallocate it 
+				-chech all possible errors
+			2) master: fork off and exec one child and have child attach to shared memory
+			3) have child do something withthe clock
+
+
 
 		2) Worker (Children):
 			-increment the value of the clock in share memory
