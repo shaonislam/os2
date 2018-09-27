@@ -19,10 +19,16 @@ master.c
 
 
 
-void handle_terminate(int sig){
+void handle_terminate(int sig)
+{
+	fprintf(stderr, "Terminating due to 2 second program life span is over.\n");
+	exit(1);
+}
 
-	printf("***TWO SECONDS ARE UP: TERMINATING***\n");
-	exit(EXIT_SUCCESS);
+void handle_cntrlC(int sig){
+	fprintf(stderr, "Terminating due to CNTRL-C\n");
+	kill(0,SIGTERM);
+	exit(1);
 }
 
 
@@ -30,6 +36,7 @@ int main (int argc, char *argv[])
 {
 	/* set up signal */
 	signal(SIGALRM, handle_terminate);
+	signal(SIGINT, handle_cntrlC);
 
 	int option, total_workers, worker_max;  
 
@@ -49,6 +56,9 @@ int main (int argc, char *argv[])
 				break;
                         case 'n':
 				total_workers = atoi(optarg);
+				if (total_workers > 20){
+					fprintf(stderr, "Invalid Input: n can't be more than 20\n");
+					exit(1);}
 				printf("Total workers: %d\n", total_workers);
 	                       	break;
                         case '?':
@@ -58,14 +68,16 @@ int main (int argc, char *argv[])
         
 	}
 
+	
+
+
         int shm_id;
         key_t key;
         void* shm;
         key = 3456;
 
-
-	/* Set Alarm */
-	fprintf(stderr, "Alarm Set at TWO Seconds\n");
+	/* Set Alarm to 2 seconds */
+	alarm(2);
 
         shm_id = shmget(key, sizeof(int)*2, IPC_CREAT | 0666);
 
@@ -74,14 +86,9 @@ int main (int argc, char *argv[])
                 perror("shmget");
                 exit(1);
         }
-
         shm = shmat(shm_id, NULL, 0);
-/*        if (shm == (char * ) -1);
-        {
-                perror("shmat");
-                exit(1);
-        }
-*/
+    
+
 
         /* init clock : PUT THE CLOCK IN SHARED MEMORY */
         int*  master_clock = shm;  
@@ -92,30 +99,46 @@ int main (int argc, char *argv[])
 	master_clock[0] = seconds;
 	master_clock[1] = milli;
 
-	fprintf(stderr, "Master's Clock: %d seconds, %d milliseconds\n", master_clock[0], master_clock[1]); 
-
         /* ARGUMENT TO PASS TO WORKER */
 	char arg1[10];
 	snprintf(arg1 , 10, "%d", total_workers);
         
 
-        /* Create ONE test worker/kid */
-        pid_t worker_pid = 0;
-        worker_pid = fork();
-        if (worker_pid == 0)
-        {
-	        /* trying to execute: worker x */
-        	execlp("./worker", "./worker", arg1, (char *)NULL);
-        	fprintf(stderr, "exec worked? \n");
-        }
-		
+	int i;
+
+
+	
+	
+	total_workers = total_workers + 1;
+	/* creates an s amount of workers  */
+	for(i = 0; i < (total_workers - worker_max); i++)
+	{
+        	pid_t worker_pid = 0;
+        	worker_pid = fork();
+        	if (worker_pid == 0)
+        	{
+	        	/* trying to execute: worker x */
+        		execlp("./worker", "./worker", arg1, (char *)NULL);
+        		fprintf(stderr, "exec worked? \n");
+        	}
+	}		
+
 
 	wait(NULL);
 
+	int left_over;
+	int remainder;
+	if (master_clock[1] > 999)
+	{
+		left_over = master_clock[1] / 1000;
+		master_clock[0] = master_clock[0] + left_over;
+		remainder = master_clock[1] % 999;
+		master_clock[1] = remainder;
+	}
 
-	fprintf(stderr, "FINAL Master's Clock: %d seconds, %d milliseconds\n", master_clock[0], master_clock[1]);	
 
-	
+	fprintf(stderr, "\nMaster's Clock: %d seconds, %d milliseconds\n", master_clock[0], master_clock[1]);
+
         /*Dealloc the shared memory*/
         shmctl(shm_id, IPC_RMID, NULL);
  

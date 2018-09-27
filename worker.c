@@ -1,11 +1,4 @@
-/* 
-
-WORKER.C  
-
-
-*/
-
-
+/*  WORKER.C  */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,27 +11,31 @@ WORKER.C
 
 int main (int argc, char *argv[])
 {
-
-	int multiplier;
-	multiplier = atoi(argv[1]);	
-
+	
+	int add_time;
+	add_time = atoi(argv[1]) * 1000000;
+	
 	int shm_id;
         key_t key;
-        void* shm;
-	
+        void* shm;	
         key = 3456;
         shm_id = shmget(key, sizeof(int)*2, IPC_CREAT | 0666);
         shm = shmat(shm_id, NULL, 0);
-
-    
         int*  master_clock = shm;
 	
-	master_clock[0] = master_clock[0] + 50;
-	master_clock[1] = master_clock[1] + 25;
+	int i;
+	for(i = 0; i < add_time; i++)
+	{	
+		master_clock[1] = master_clock[1] + 1;
+	
+		/*checking if milliseconds 'overflowed'*/		
+		if (master_clock[1] == 999)
+		{
+			master_clock[0] = master_clock[0] + 1;
+			master_clock[1] = 0;
+		}
 
-	printf("Child's Clock: %d seconds, %d milliseconds\n", master_clock[0], master_clock[1]);       
-
-
+	}
 
 	return 0;
 }

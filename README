@@ -6,12 +6,9 @@ Specifications:
 			executing and terminate when all children are done
 			-Command Line Options:
 				-h: how it should run
-				-n x: indicate max number of children to
-				      go off of
-				-s: how many children should allowed to exist
-				      int the system at the same time.
-			-1) allocate shared memory, use it, the deallocate it 
-				-chech all possible errors
+				-n x: indicate max number of children to go off of
+				-s: how many children should allowed to exist in the system at the same time.
+			1) allocate shared memory, use it, the deallocate it 
 			2) master: fork off and exec one child and have child attach to shared memory
 			3) have child do something withthe clock
 
@@ -23,4 +20,10 @@ Specifications:
 			the results "overflows" the counter of milliseconds.
 			Once done, they should output a message to the screen of ho much they
 			have incremented and then terminate.
+
+
+VALID EXECUTION: 1) make
+		 2) master -n X -s Y
+			---where X is an integer that is not greater than 20
+			---where Y is an integer that is less than X
 
